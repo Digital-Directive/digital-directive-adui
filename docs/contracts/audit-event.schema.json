@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://digital-directive.github.io/adui/schemas/audit-event.schema.json",
+  "title": "ADUI Audit Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "tenant_id",
+    "requesting_user_id",
+    "agent_id",
+    "actor_type",
+    "session_id",
+    "tool_name",
+    "action",
+    "risk_level",
+    "confirmation",
+    "result",
+    "timestamp"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tenant_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requesting_user_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actor_type": {
+      "type": "string",
+      "const": "AGENT"
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "screen": {
+      "type": "string"
+    },
+    "component_id": {
+      "type": "string"
+    },
+    "tool_name": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "object"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+    },
+    "confirmation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "status"],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["NOT_REQUIRED", "REQUESTED", "APPROVED", "DENIED", "EXPIRED"]
+        },
+        "confirmed_by_user_id": {
+          "type": "string"
+        },
+        "confirmed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["OK", "BLOCKED", "FAILED", "CANCELLED", "ROLLED_BACK"]
+        },
+        "message": {
+          "type": "string"
+        },
+        "error_code": {
+          "type": "string"
+        }
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

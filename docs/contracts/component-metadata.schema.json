@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://digital-directive.github.io/adui/schemas/component-metadata.schema.json",
+  "title": "ADUI Component Metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "role",
+    "description",
+    "actions",
+    "permissions",
+    "visibility",
+    "enabled"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$",
+      "examples": ["clients.new-button", "barber.form"]
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "page",
+        "form",
+        "field",
+        "button",
+        "dialog",
+        "menu",
+        "table",
+        "list",
+        "panel",
+        "unknown"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "navigate",
+          "highlight",
+          "fill",
+          "validate",
+          "click",
+          "submit",
+          "clear",
+          "search",
+          "select",
+          "upload",
+          "download",
+          "copy",
+          "paste"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "visibility": {
+      "type": "string",
+      "enum": ["VISIBLE", "HIDDEN", "DISABLED", "CONDITIONAL"]
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+    }
+  }
+}

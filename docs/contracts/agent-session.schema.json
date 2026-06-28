@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://digital-directive.github.io/adui/schemas/agent-session.schema.json",
+  "title": "ADUI Agent Session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "tenant_id",
+    "requesting_user_id",
+    "agent_id",
+    "actor_type",
+    "mode",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tenant_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requesting_user_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actor_type": {
+      "type": "string",
+      "const": "AGENT"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["GUIDE", "ASSIST", "EXECUTE", "AUTONOMOUS"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACTIVE", "WAITING_USER", "COMPLETED", "FAILED", "CANCELLED"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed_tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "allowed_routes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "max_tool_calls": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

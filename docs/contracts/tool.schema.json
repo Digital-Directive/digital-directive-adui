@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://digital-directive.github.io/adui/schemas/tool.schema.json",
+  "title": "ADUI Tool",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "description",
+    "input_schema",
+    "result_schema",
+    "required_permissions",
+    "risk_level",
+    "confirmation_policy",
+    "audit_event_type",
+    "rollback_strategy"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-zA-Z0-9]*$",
+      "examples": ["navigate", "fillForm", "submit"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_schema": {
+      "type": "object"
+    },
+    "result_schema": {
+      "type": "object"
+    },
+    "required_permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+    },
+    "confirmation_policy": {
+      "type": "string",
+      "enum": ["NEVER", "BEFORE_SUBMIT", "ALWAYS", "STEP_UP"]
+    },
+    "audit_event_type": {
+      "type": "string",
+      "pattern": "^[a-z]+(\\.[a-z]+)*$",
+      "examples": ["ui.navigate", "ui.form.submit"]
+    },
+    "rollback_strategy": {
+      "type": "string",
+      "enum": ["NONE", "UNDO_TOOL", "COMPENSATING_ACTION", "TRANSACTION"]
+    },
+    "disabled_reason": {
+      "type": "string"
+    }
+  }
+}
