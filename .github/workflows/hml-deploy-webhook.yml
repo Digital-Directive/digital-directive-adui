@@ -59,12 +59,14 @@ jobs:
           if secret:
               signature = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
               headers["X-Digital-Directive-Signature-256"] = f"sha256={signature}"
+
           request = urllib.request.Request(url, data=body, headers=headers, method="POST")
           with urllib.request.urlopen(request, timeout=30) as response:
               status = response.status
               text = response.read(4096).decode("utf-8", errors="replace")
+
           if status >= 300:
               print(f"Deploy webhook failed with HTTP {status}: {text}", file=sys.stderr)
               sys.exit(1)
-          print(f"Deploy webhook accepted with HTTP {status}")
+          print(f"Deploy webhook accepted with HTTP {status}: {text}")
           PY
