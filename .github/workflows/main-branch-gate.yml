@@ -4,20 +4,87 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   require-hml-source:
     name: Require promotion from hml
     runs-on: ubuntu-latest
     steps:
-      - name: Validate source branch
+      - name: Checkout history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate promotion path
+        env:
+          API_URL: ${{ github.api_url }}
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
         run: |
-          if [ "${{ github.head_ref }}" != "hml" ]; then
-            echo "main only accepts promotion pull requests from hml." >&2
-            echo "Open changes against hml first, validate HML, then promote hml -> main." >&2
-            exit 1
+          set -euo pipefail
+
+          if [ "${EVENT_NAME}" = "pull_request" ]; then
+            if [ "${HEAD_REF}" != "hml" ]; then
+              echo "main only accepts promotion pull requests from hml." >&2
+              echo "Open changes against hml first, validate HML, then promote hml -> main." >&2
+              exit 1
+            fi
+
+            echo "main promotion source verified: hml"
+            exit 0
           fi
-          echo "main promotion source verified: hml"
+
+          git fetch --no-tags origin +refs/heads/hml:refs/remotes/origin/hml
+
+          if git merge-base --is-ancestor "${SHA}" origin/hml; then
+            echo "main update verified: target commit already exists in hml"
+            exit 0
+          fi
+
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.request
+
+          api_url = os.environ["API_URL"].rstrip("/")
+          repo = os.environ["REPOSITORY"]
+          sha = os.environ["SHA"]
+          token = os.environ["GH_TOKEN"]
+
+          request = urllib.request.Request(
+              f"{api_url}/repos/{repo}/commits/{sha}/pulls",
+              headers={
+                  "Accept": "application/vnd.github+json",
+                  "Authorization": f"Bearer {token}",
+                  "X-GitHub-Api-Version": "2022-11-28",
+              },
+          )
+
+          with urllib.request.urlopen(request, timeout=20) as response:
+              pulls = json.load(response)
+
+          for pull in pulls:
+              base = pull.get("base", {}).get("ref")
+              head = pull.get("head", {}).get("ref")
+              merged_at = pull.get("merged_at")
+              merge_commit_sha = pull.get("merge_commit_sha")
+
+              if base == "main" and head == "hml" and merged_at and merge_commit_sha == sha:
+                  print(f"main update verified: merged hml promotion PR #{pull.get('number')}")
+                  sys.exit(0)
+
+          print("main only accepts promotion pull requests from hml.", file=sys.stderr)
+          print("Direct pushes to main are rejected by policy.", file=sys.stderr)
+          sys.exit(1)
+          PY

@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+set -eu
+
+while read -r local_ref local_oid remote_ref remote_oid
+do
+  [ "${remote_ref}" = "refs/heads/main" ] || continue
+
+  cat >&2 <<'MSG'
+Direct pushes to main are blocked.
+
+Use the required flow:
+1. Push changes to hml.
+2. Wait for the HML deploy webhook and checks.
+3. Promote hml to main through a GitHub pull request.
+MSG
+  exit 1
+done
+
+exit 0

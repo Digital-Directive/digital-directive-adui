@@ -23,3 +23,9 @@
 - Prefer committing to `hml` or a feature branch. Do not create new direct commits on `main`.
 - Keep secrets out of Git. Use credential vaults or GitHub secrets.
 - When deployment behavior changes, update this file and the relevant workflow in the same PR.
+
+## Local main push guard
+
+- Keep `git config core.hooksPath .githooks` enabled locally.
+- The committed `.githooks/pre-push` hook blocks local pushes to `main`; promotion must happen through GitHub PR `hml` -> `main`.
+- The `main-branch-gate.yml` workflow runs on PRs to `main` and pushes to `main`; any `main` update not traceable to `hml` must fail the audit.
