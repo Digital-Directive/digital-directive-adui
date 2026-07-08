@@ -1,0 +1,23 @@
+name: Main Branch Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  require-hml-source:
+    name: Require promotion from hml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate source branch
+        run: |
+          if [ "${{ github.head_ref }}" != "hml" ]; then
+            echo "main only accepts promotion pull requests from hml." >&2
+            echo "Open changes against hml first, validate HML, then promote hml -> main." >&2
+            exit 1
+          fi
+          echo "main promotion source verified: hml"

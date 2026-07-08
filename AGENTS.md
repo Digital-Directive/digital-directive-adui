@@ -1,38 +1,25 @@
-# AGENTS.md
+# Digital Directive Agent Rules
 
-Este repositório contém a arquitetura e a documentação inicial do ADUI
-(Agent-Driven User Interface) da Digital Directive.
+## Branch and deployment policy
 
-## Diretriz principal
+- `main` is production-facing and must not receive direct feature or fix work after the final direct-main publication on 2026-07-08.
+- All future changes must land in `hml` first. Use feature branches or local work, open/merge into `hml`, validate HML, then promote `hml` to `main` by pull request.
+- Pull requests into `main` must have `hml` as the source branch. Do not open feature branches directly against `main`.
+- A push to `hml` is the deployment handoff for homologation. The GitHub Actions workflow `.github/workflows/hml-deploy-webhook.yml` must call the deploy webhook configured in repository secrets.
+- Production deploys must happen only after HML validation and promotion from `hml` to `main`. Do not create or mutate production resources directly from local commands unless the user explicitly declares an emergency exception.
+- Backend services deploy to AWS. AWS mutations must go through the approved deployment workflow/server or documented AWS deployment runbook, never by ad hoc production changes hidden from GitHub.
 
-- Este projeto nasce como documentação e contratos de arquitetura. Não introduza
-  runtime de produção sem uma decisão arquitetural registrada em `docs/adr`.
-- O ADUI nunca deve manipular DOM diretamente. A execução do agente acontece
-  apenas por ferramentas declaradas pelo frontend.
-- Toda ação executável deve ter schema, ACL, política de confirmação e trilha de
-  auditoria.
-- Sessões agenticas devem operar com `actor_type = AGENT`; nunca simular o
-  usuário humano como executor direto.
+## Required GitHub controls
 
-## Separação de responsabilidades
+- Protect `main`: require pull requests, disallow force pushes and deletions, and require the main gate workflow.
+- Keep `hml` available as the pre-production integration branch.
+- Configure these repository secrets before relying on HML deploy automation:
+  - `HML_DEPLOY_WEBHOOK_URL`: HTTPS endpoint on the deployment server.
+  - `HML_DEPLOY_WEBHOOK_SECRET`: shared secret used to sign the webhook payload.
 
-- Frontend, SDKs, tooling, schemas e bibliotecas de UI podem ser TypeScript.
-- Backend, runtime server-side, workers, jobs, integrações e serviços de
-  produção devem seguir o padrão Digital Directive em Rust.
-- Infraestrutura deve ser documentada e, quando implementada, nascer em projeto
-  próprio de Terraform/IaC.
-- Dados e migrations operacionais não pertencem a este repositório.
+## Agent behavior
 
-## Segurança
-
-- Não comitar segredos, tokens, chaves, dados pessoais reais ou dumps de
-  produção.
-- Ações críticas exigem confirmação explícita e registro auditável.
-- Pagamentos, permissões, exclusões críticas, alteração de usuários e
-  movimentações financeiras ficam bloqueados por padrão até existir política
-  formal de risco e confirmação.
-
-## Operação local
-
-- Ao executar comandos neste workspace, prefixe com `rtk`.
-- Antes de publicar alterações, valide os documentos e schemas relevantes.
+- Before changing production-facing code, check the current branch and remote state.
+- Prefer committing to `hml` or a feature branch. Do not create new direct commits on `main`.
+- Keep secrets out of Git. Use credential vaults or GitHub secrets.
+- When deployment behavior changes, update this file and the relevant workflow in the same PR.

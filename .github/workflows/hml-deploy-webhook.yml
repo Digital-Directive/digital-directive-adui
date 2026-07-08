@@ -1,0 +1,70 @@
+name: HML Deploy Webhook
+
+on:
+  push:
+    branches:
+      - hml
+
+permissions:
+  contents: read
+
+jobs:
+  notify-deploy-server:
+    name: Notify deployment server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send signed HML deploy webhook
+        env:
+          HML_DEPLOY_WEBHOOK_URL: ${{ secrets.HML_DEPLOY_WEBHOOK_URL }}
+          HML_DEPLOY_WEBHOOK_SECRET: ${{ secrets.HML_DEPLOY_WEBHOOK_SECRET }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import hmac
+          import json
+          import os
+          import sys
+          import urllib.request
+
+          url = os.environ.get("HML_DEPLOY_WEBHOOK_URL", "").strip()
+          if not url:
+              print("HML_DEPLOY_WEBHOOK_URL is not configured; skipping deploy webhook.")
+              sys.exit(0)
+
+          payload = {
+              "environment": "hml",
+              "repository": os.environ["GITHUB_REPOSITORY"],
+              "branch": os.environ["GITHUB_REF_NAME"],
+              "sha": os.environ["GITHUB_SHA"],
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "actor": os.environ["GITHUB_ACTOR"],
+          }
+          body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+          headers = {
+              "Content-Type": "application/json",
+              "User-Agent": "digital-directive-hml-deploy-webhook",
+              "X-Digital-Directive-Event": "hml.deploy",
+              "X-Digital-Directive-Repository": payload["repository"],
+              "X-Digital-Directive-Branch": payload["branch"],
+              "X-Digital-Directive-Sha": payload["sha"],
+          }
+          secret = os.environ.get("HML_DEPLOY_WEBHOOK_SECRET", "")
+          if secret:
+              signature = hmac.new(secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
+              headers["X-Digital-Directive-Signature-256"] = f"sha256={signature}"
+          request = urllib.request.Request(url, data=body, headers=headers, method="POST")
+          with urllib.request.urlopen(request, timeout=30) as response:
+              status = response.status
+              text = response.read(4096).decode("utf-8", errors="replace")
+          if status >= 300:
+              print(f"Deploy webhook failed with HTTP {status}: {text}", file=sys.stderr)
+              sys.exit(1)
+          print(f"Deploy webhook accepted with HTTP {status}")
+          PY
